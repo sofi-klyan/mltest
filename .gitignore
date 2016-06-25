@@ -18,3 +18,5 @@
 *.app
 *.db
 *.idb
+x64/
+MLTest/res_k.txt
