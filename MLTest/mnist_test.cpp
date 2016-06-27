@@ -200,15 +200,15 @@ int MNISTTester::Process()
 
 	// train
 	KNNClassifier* pKNNCl = new KNNClassifier(m_classNum);
-	/*
+	
 	pKNNCl->Train(
 		(void**)trainReducedSet.m_ppInputs,
 		(void*)trainReducedSet.m_pOutputs,
 		trainReducedSet.m_sampleNumber,
 		m_pcNum
 	);	
-	*/
-
+	
+	/*
 	pKNNCl->SetClassifier(
 		(void**)trainReducedSet.m_ppInputs, 
 		(void*)trainReducedSet.m_pOutputs, 
@@ -216,8 +216,8 @@ int MNISTTester::Process()
 		m_pcNum,
 		3
 	);
-	
-	pKNNCl->Save(kNNFile); // not fully implemented yet
+	*/
+	pKNNCl->Save(kNNFile);
 
 	delete (pKNNCl);
 	pKNNCl = new KNNClassifier();

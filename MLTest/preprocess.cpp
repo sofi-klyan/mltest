@@ -113,13 +113,24 @@ int Preprocessor::calcPCA(
 		}
 	}
 
+	Mat mu = Mat(data_pts.rows, data_pts.cols, CV_64FC1);
+	for (int i = 0; i < mu.cols; i++)
+	{
+		double meanColValue = mean(data_pts.col(i)).val[0];
+		for (int j = 0; j < mu.rows; j++)
+		{
+			mu.at<double>(j, i) = meanColValue;
+		}
+	}
 
-	Mat cov, mu;
-	calcCovarMatrix(data_pts, cov, mu, CV_COVAR_NORMAL | CV_COVAR_ROWS);
-	cov = cov / (data_pts.rows - 1);
+	Mat shifted_input = data_pts - mu;
 
+	Mat cov;
+	mulTransposed(shifted_input, cov, true);
+	cov = cov / (shifted_input.rows - 1);
+
+	// extreme overkill just to get eigenvectors! TODO - manually implement or get lighter 3rd-party implementation
 	PCA pca_analysis(data_pts, Mat(), CV_PCA_DATA_AS_ROW);
-
 	Mat eigenMat = Mat(featureNumber, pcNum, CV_64FC1);
 	for (int i = 0; i < pcNum; i++)
 	{
@@ -128,18 +139,8 @@ int Preprocessor::calcPCA(
 			eigenMat.at<double>(j, i) = pca_analysis.eigenvectors.at<double>(i, j);
 		}
 	}
-
-	Mat shifted_input = Mat(sampleNumber, featureNumber, CV_64FC1);
-	for (int i = 0; i < sampleNumber; i++)
-	{
-		for (int j = 0; j < featureNumber; j++)
-		{
-			shifted_input.at<double>(i, j) = data_pts.at<double>(i, j) - pca_analysis.mean.at<double>(0, j);
-		}
-	}
-
-	Mat reduced_input = Mat(sampleNumber, pcNum, CV_64FC1);
-	reduced_input = shifted_input * eigenMat;
+	
+	Mat reduced_input = shifted_input * eigenMat;
 
 	if (ppConvertedBackSamples)
 	{
@@ -150,7 +151,7 @@ int Preprocessor::calcPCA(
 		{
 			for (int j = 0; j < featureNumber; j++)
 			{
-				int val = (int)round(recovered_input.at<double>(i, j) + pca_analysis.mean.at<double>(0, j));
+				int val = (int)round(recovered_input.at<double>(i, j) + mu.at<double>(0, j));
 				if (val < 0) val = 0;
 				else if (val > 255) val = 255;
 				ppConvertedBackSamples[i][j] = (unsigned char)val;
@@ -221,8 +222,7 @@ int Preprocessor::ReduceByPCAMatrix(
 
 	data_pts = data_pts - mu;
 
-	Mat reduced_pts = Mat(sampleNumber, reducedFeatureNumber, CV_64FC1);
-	reduced_pts = data_pts * eigenMat;
+	Mat reduced_pts = data_pts * eigenMat;
 
 	unsigned char** ppReducedSamples = new unsigned char* [sampleNumber];
 	for (int i = 0; i < sampleNumber; i++)
