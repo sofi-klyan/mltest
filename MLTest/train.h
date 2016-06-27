@@ -44,6 +44,7 @@ public:
 	int Train(void** ppTrainInputs, void* pTrainOutputs, int sampleNumber, int featureNumber);
 	int Test(void** ppTestInputs, void* pTestOutputs, int sampleNumber, int* pError);
 	int Classify(void* pInput, void* pOutput);
+	int SetClassifier(void** ppTrainInputs, void* pTrainOutputs, int sampleNumber, int featureNumber, int k);
 	int Save(char* fileName);
 	int Load(char* fileName);	
 

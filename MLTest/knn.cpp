@@ -74,6 +74,22 @@ int KNNClassifier::Train(void** pTrainInputs, void* pTrainOutputs, int sampleNum
 	return e_OK;
 }
 
+int KNNClassifier::SetClassifier(void** pTrainInputs, void* pTrainOutputs, int sampleNumber, int featureNumber, int k)
+{
+	if (!pTrainInputs || !pTrainOutputs || (sampleNumber <= 0))
+	{
+		return e_Error;
+	}
+
+	unsigned char** ppImages = (unsigned char**)pTrainInputs;
+	unsigned char* pLabels = (unsigned char*)pTrainOutputs;
+
+	SetTrainSet((unsigned char**)pTrainInputs, (unsigned char*)pTrainOutputs, sampleNumber, featureNumber);
+	m_k = k;
+	
+	return e_OK;
+}
+
 int KNNClassifier::Test(void** ppTestInputs, void* pTestOutputs, int sampleNumber, int* pError)
 {
 	if (!m_ppTrainInputs || !m_pTrainOutputs || 
@@ -100,14 +116,14 @@ int KNNClassifier::Test(void** ppTestInputs, void* pTestOutputs, int sampleNumbe
 		}
 	}
 
-	*pError = error;
+ 	*pError = error;
 
 	return e_OK;
 }
 
 int KNNClassifier::Classify(void* pInput, void* pOutput)
 {
-	if (!pInput || !pOutput || m_ppTrainInputs || m_pTrainOutputs)
+	if (!pInput || !pOutput || !m_ppTrainInputs || !m_pTrainOutputs)
 	{
 		return e_Error;
 	}

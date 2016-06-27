@@ -27,9 +27,6 @@
     <ClCompile Include="knn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="train.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="mnist_test.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

@@ -113,7 +113,7 @@
       <AdditionalDependencies>opencv_world310d.lib;kernel32.lib;user32.lib;gdi32.lib;winspool.lib;comdlg32.lib;advapi32.lib;shell32.lib;ole32.lib;oleaut32.lib;uuid.lib;odbc32.lib;odbccp32.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)opencv3.1\bin"  "$(TargetDir)*.dll"</Command>
+      <Command>xcopy /Y "$(SolutionDir)opencv3.1\bin\opencv_world310d.dll"  "$(TargetDir)opencv_world310d.dll"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
@@ -153,7 +153,7 @@
       <AdditionalLibraryDirectories>../opencv3.1/lib;</AdditionalLibraryDirectories>
     </Link>
     <PostBuildEvent>
-      <Command>xcopy /Y "$(SolutionDir)opencv3.1\bin"  "$(TargetDir)*.dll"</Command>
+      <Command>xcopy /Y "$(SolutionDir)opencv3.1\bin\opencv_world310.dll"  "$(TargetDir)opencv_world310.dll"</Command>
     </PostBuildEvent>
   </ItemDefinitionGroup>
   <ItemGroup>
@@ -162,7 +162,6 @@
     <ClCompile Include="mnist_test.cpp" />
     <ClCompile Include="preprocess.cpp" />
     <ClCompile Include="knn.cpp" />
-    <ClCompile Include="train.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="err.h" />

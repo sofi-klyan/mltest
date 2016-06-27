@@ -6,6 +6,7 @@ public:
 	DataSet();
 	~DataSet();
 	void Clean();
+	int CopyOutputs(unsigned char* pOutputs, int size);
 
 private:
 	void CleanInputs();
@@ -36,11 +37,16 @@ private:
 	MNISTTester();
 
 	int LoadDataSet(const char* pInputFile, const char* pOutputFile, DataSet* pSet);
-	int LoadAndPreprocessData(
-		const char* pInputFile, 
-		const char* pOutputFile, 
-		int maxSampleNumber, 
+	int LoadDataSubSet(
+		const char* pInputFile,
+		const char* pOutputFile,
+		int maxSampleNumber,
 		DataSet* pSet
+	);
+	int PerformPCA(
+		const DataSet& subset,
+		DataSet* pSet,
+		char* pPCAOutputFile
 	);
 
 private:

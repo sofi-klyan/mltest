@@ -19,6 +19,23 @@ DataSet::~DataSet()
 	Clean();
 }
 
+int DataSet::CopyOutputs(unsigned char* pOutputs, int size)
+{
+	if (size != m_sampleNumber)
+	{
+		return e_Error;
+	}
+
+	if (m_pOutputs)
+	{
+		delete (m_pOutputs);
+	}
+	m_pOutputs = new unsigned char[size];
+	memcpy(m_pOutputs, pOutputs, size * sizeof(unsigned char));
+
+	return e_OK;
+}
+
 void DataSet::Clean()
 {
 	CleanInputs();
@@ -101,10 +118,10 @@ int MNISTTester::LoadDataSet(const char* pInputFile, const char* pOutputFile, Da
 	return e_OK;
 }
 
-int MNISTTester::LoadAndPreprocessData(
-	const char* pInputFile, 
-	const char* pOutputFile, 
-	int maxSampleNumber, 
+int MNISTTester::LoadDataSubSet(
+	const char* pInputFile,
+	const char* pOutputFile,
+	int maxSampleNumber,
 	DataSet* pSet
 )
 {
@@ -118,30 +135,40 @@ int MNISTTester::LoadAndPreprocessData(
 	{
 		return e_Error;
 	}
-
-	DataSet subset;
-	subset.m_featureNumber = set.m_featureNumber;
+	
+	pSet->m_featureNumber = set.m_featureNumber;
 	Preprocessor::ChooseDataSubset(
 		set.m_ppInputs,
 		set.m_pOutputs,
 		set.m_sampleNumber,
 		set.m_featureNumber,
 		maxSampleNumber,
-		&subset.m_ppInputs,
-		&subset.m_pOutputs,
-		&subset.m_sampleNumber
+		&pSet->m_ppInputs,
+		&pSet->m_pOutputs,
+		&pSet->m_sampleNumber
 	);
 
-	// calcPCA
-	DataSet* pReducedSet = pSet;
-	pReducedSet->m_featureNumber = m_pcNum;	
-	pReducedSet->m_sampleNumber = subset.m_sampleNumber;	
-	pReducedSet->m_pOutputs = new unsigned char[pReducedSet->m_sampleNumber];
-	for (int i = 0; i < pReducedSet->m_sampleNumber; i++)
+	return e_OK;
+
+}
+
+int MNISTTester::PerformPCA(
+	const DataSet& subset,
+	DataSet* pSet,
+	char* pPCAOutputFile
+)
+{
+	if (!pSet)
 	{
-		pReducedSet->m_pOutputs[i] = subset.m_pOutputs[i];
+		return e_Error;
 	}
-	pReducedSet->m_ppInputs = new unsigned char*[subset.m_sampleNumber];	
+
+	DataSet* pReducedSet = pSet;
+	pReducedSet->m_featureNumber = m_pcNum;
+	pReducedSet->m_sampleNumber = subset.m_sampleNumber;
+	pReducedSet->CopyOutputs(subset.m_pOutputs, pReducedSet->m_sampleNumber);
+	
+	pReducedSet->m_ppInputs = new unsigned char*[subset.m_sampleNumber];
 	for (int i = 0; i < subset.m_sampleNumber; i++)
 	{
 		pReducedSet->m_ppInputs[i] = new unsigned char[m_pcNum];
@@ -153,40 +180,61 @@ int MNISTTester::LoadAndPreprocessData(
 		m_pcNum,
 		NULL,
 		pReducedSet->m_ppInputs,
-		"m.txt"
+		pPCAOutputFile
 	);
-
-	// clean
-	/*
-	if (set.m_ppInputs)
-	{
-		delete (set.m_ppInputs);
-	}
-	if (set.m_pOutputs)
-	{
-		delete (set.m_pOutputs);
-	}
-	if (subset.m_ppInputs)
-	{
-		delete (subset.m_ppInputs);
-	}
-	*/
 
 	return e_OK;
 }
 
 int MNISTTester::Process()
 {
-	DataSet trainSet;
+	DataSet trainSet, testSet;
+	DataSet trainReducedSet, testReducedSet;
+
+	char* pcaMatrixFile = "pca_mat.txt";
 
 	// preprocess
-	LoadAndPreprocessData(m_pTrainInputFile, m_pTrainOutputFile, m_maxTrainSampleNum, &trainSet);
+	LoadDataSubSet(m_pTrainInputFile, m_pTrainOutputFile, m_maxTrainSampleNum, &trainSet);
+	PerformPCA(trainSet, &trainReducedSet, pcaMatrixFile);
 
 	// train
 	KNNClassifier* pKNNCl = new KNNClassifier(m_classNum);
-	pKNNCl->Train((void**)trainSet.m_ppInputs, (void*)trainSet.m_pOutputs, trainSet.m_sampleNumber, m_pcNum);
+	/*
+	pKNNCl->Train(
+		(void**)trainReducedSet.m_ppInputs,
+		(void*)trainReducedSet.m_pOutputs,
+		trainReducedSet.m_sampleNumber,
+		m_pcNum
+	);
+	*/
+	pKNNCl->SetClassifier(
+		(void**)trainReducedSet.m_ppInputs, 
+		(void*)trainReducedSet.m_pOutputs, 
+		trainReducedSet.m_sampleNumber, 
+		m_pcNum,
+		3
+	);
 	pKNNCl->Save("res_k.txt"); // not fully implemented yet
 
+	// test
+	LoadDataSubSet(m_pTestInputFile, m_pTestOutputFile, m_maxTestSampleNum, &testSet);
+	testReducedSet.m_sampleNumber = testSet.m_sampleNumber;
+	testReducedSet.CopyOutputs(testSet.m_pOutputs, testSet.m_sampleNumber);
+
+	Preprocessor::ReduceByPCAMatrix(
+		(const unsigned char**)testSet.m_ppInputs,
+		testSet.m_sampleNumber,
+		testSet.m_featureNumber,
+		pcaMatrixFile,
+		&testReducedSet.m_ppInputs,
+		&testReducedSet.m_featureNumber
+	);
+
+	int testError = 0;
+	pKNNCl->Test((void**)testReducedSet.m_ppInputs, testReducedSet.m_pOutputs, testReducedSet.m_sampleNumber, &testError);
+	string output = "Test Set error: " + to_string(testError) + " out of " + to_string(testReducedSet.m_sampleNumber);
+	Logger::PrintLog(output.c_str());
+	
 	// clean
 	delete (pKNNCl);
 

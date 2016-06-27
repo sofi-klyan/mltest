@@ -9,7 +9,7 @@ int main(int argc, char* argv[])
 	
 	const int max_img_number = 2000;
 
-	MNISTTester* test = new MNISTTester(imagesFile, labelsFile, testImagesFile, testLabelsFile, max_img_number, -1);
+	MNISTTester* test = new MNISTTester(imagesFile, labelsFile, testImagesFile, testLabelsFile, max_img_number, max_img_number);
 	test->Process();
 	
 	return 0;
