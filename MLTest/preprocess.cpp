@@ -252,7 +252,7 @@ int Preprocessor::LoadMatrix(char* pMatrixFile, cv::Mat& m)
 
 		if (!fin)
 		{
-			string log = string("File can not be opened for loadng a matrix: ") + pMatrixFile;
+			string log = string("File can not be opened for loading a matrix: ") + pMatrixFile;
 			Logger::PrintLog(log.c_str());
 			return e_Error;
 		}

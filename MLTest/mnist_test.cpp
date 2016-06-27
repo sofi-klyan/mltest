@@ -192,6 +192,7 @@ int MNISTTester::Process()
 	DataSet trainReducedSet, testReducedSet;
 
 	char* pcaMatrixFile = "pca_mat.txt";
+	char* kNNFile = "knn.txt";
 
 	// preprocess
 	LoadDataSubSet(m_pTrainInputFile, m_pTrainOutputFile, m_maxTrainSampleNum, &trainSet);
@@ -205,8 +206,9 @@ int MNISTTester::Process()
 		(void*)trainReducedSet.m_pOutputs,
 		trainReducedSet.m_sampleNumber,
 		m_pcNum
-	);
+	);	
 	*/
+
 	pKNNCl->SetClassifier(
 		(void**)trainReducedSet.m_ppInputs, 
 		(void*)trainReducedSet.m_pOutputs, 
@@ -214,7 +216,12 @@ int MNISTTester::Process()
 		m_pcNum,
 		3
 	);
-	pKNNCl->Save("res_k.txt"); // not fully implemented yet
+	
+	pKNNCl->Save(kNNFile); // not fully implemented yet
+
+	delete (pKNNCl);
+	pKNNCl = new KNNClassifier();
+	pKNNCl->Load(kNNFile);
 
 	// test
 	LoadDataSubSet(m_pTestInputFile, m_pTestOutputFile, m_maxTestSampleNum, &testSet);

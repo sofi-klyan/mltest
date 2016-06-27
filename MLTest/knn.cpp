@@ -12,7 +12,7 @@ using namespace std;
 KNNClassifier::KNNClassifier()
 {
 	m_k = 0;
-
+	m_classNum = 0;
 	m_ppTrainInputs = NULL;
 	m_pTrainOutputs = NULL;
 }
@@ -29,13 +29,31 @@ KNNClassifier::KNNClassifier(int _classNum)
 KNNClassifier::~KNNClassifier ()
 {};
 
+/* kNN data is stored in the following format:
+** <optimal k> <number of classes>
+** <number of train samples> <number of features>
+** <train input values matrix 0-th row> <corresponding output>
+** ...
+** <train input values matrix (n - 1)-th row> <corresponding output>
+*/
+
 int KNNClassifier::Save(char* fileName)
 {
 	eErrorCode res = e_OK;
 
 	ofstream resFile;
 	resFile.open(fileName);
-	resFile << m_k;
+	resFile << m_k << "\t" << m_classNum << endl;
+	resFile << m_trainSampleNum << "\t" << m_featureNum << endl;
+	for (int i = 0; i < m_trainSampleNum; i++)
+	{
+		for (int j = 0; j < m_featureNum; j++)
+		{
+			resFile << (int)m_ppTrainInputs[i][j] << "\t";
+		}
+		resFile << (int)m_pTrainOutputs[i];
+		resFile << endl;
+	}
 	resFile.close();
 
 	return res;
@@ -48,7 +66,29 @@ int KNNClassifier::Load(char* fileName)
 	//TODO - add format check
 	fstream file(fileName, std::ios_base::in);
 	file >> m_k;
-	
+	file >> m_classNum;
+	file >> m_trainSampleNum;
+	file >> m_featureNum;
+
+	m_ppTrainInputs = new unsigned char*[m_trainSampleNum];
+	m_pTrainOutputs = new unsigned char[m_trainSampleNum];
+
+	for (int i = 0; i < m_trainSampleNum; i++)
+	{
+		m_ppTrainInputs[i] = new unsigned char[m_featureNum];
+		for (int j = 0; j < m_featureNum; j++)
+		{
+			int val;
+			file >> val; // 
+			m_ppTrainInputs[i][j] = (unsigned char)val;
+			//m_ppTrainInputs[i][j] -= '0';
+		}
+		int val;
+		file >> val;
+		m_pTrainOutputs[i] = (unsigned char)val;
+		//m_pTrainOutputs[i] -= '0';
+	}
+
 	return res;
 }
 
